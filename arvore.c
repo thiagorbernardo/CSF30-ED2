@@ -1,319 +1,214 @@
 #include "arvore.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
-Arvore *constroi_arv(char elem, Arvore *esq, Arvore *dir)
+/*----------------------*/
+int maior(int esq, int dir)
 {
-	Arvore *arv = (Arvore *)malloc(sizeof(Arvore));
-	arv->info = elem;
-	arv->esq = esq;
-	arv->dir = dir;
-	return arv;
+	return (esq > dir ? esq : dir);
 }
 
-Arvore *cria_arv_vazia()
+/*----------------------*/
+int altura(Arvore *a)
 {
-	return NULL;
+	return (a == NULL ? -1 : a->altura);
 }
 
-int verifica_arv_vazia(Arvore *a)
+int atualizar_altura(Arvore *a)
 {
-	return (a == NULL);
+	return (maior(altura(a->esq), altura(a->dir)) + 1);
 }
 
-void arv_libera(Arvore *a)
+/*----------------------*/
+int balanceamento(Arvore *a)
 {
-	if (!verifica_arv_vazia(a))
+	return (altura(a->dir) - altura(a->esq));
+}
+
+/*----------------------*/
+Arvore *rotacao_simples_esq(Arvore *a)
+{
+	No *t = a->dir; // t aponta pra dir
+	a->dir = t->esq;		// t direita aponta pra a
+	t->esq = a; 
+	a->altura = atualizar_altura(a);
+	t->altura = atualizar_altura(t);
+	return t;
+}
+
+/*----------------------*/
+Arvore *rotacao_simples_dir(Arvore *a)
+{
+	No *t = a->esq; // t aponta pra esq
+	a->esq = t->dir;
+	t->dir = a;		// t esquerda aponta pra a
+	a->altura = atualizar_altura(a);
+	t->altura = atualizar_altura(t);
+	return t;
+}
+
+/*----------------------*/
+Arvore *rotacao_dupla_esq(Arvore *a)
+{
+	a->dir = rotacao_simples_dir(a->dir);
+	return rotacao_simples_esq(a);
+}
+
+/*----------------------*/
+Arvore *rotacao_dupla_dir(Arvore *a)
+{
+	a->esq = rotacao_simples_esq(a->esq);
+	return rotacao_simples_dir(a);
+}
+
+/*----------------------*/
+Arvore *atualizar_fb_dir(Arvore *a)
+{
+	a->altura = atualizar_altura(a);
+	if (balanceamento(a) == 2)
 	{
-		arv_libera(a->esq);
-		arv_libera(a->dir);
-		free(a);
-	}
-}
-
-void destroi_arv(Arvore *arv)
-{
-	if (arv != NULL)
-	{
-		destroi_arv(arv->esq);
-		destroi_arv(arv->dir);
-		free(arv);
-	}
-}
-
-void pre_order(Arvore *arv)
-{
-	printf("%d ", arv->info);
-	if (arv->esq != NULL)
-		pre_order(arv->esq);
-
-	if (arv->dir != NULL)
-		pre_order(arv->dir);
-}
-
-void in_order(Arvore *arv)
-{
-	if (arv->esq != NULL)
-		in_order(arv->esq);
-
-	printf("%d ", arv->info);
-
-	if (arv->dir != NULL)
-		in_order(arv->dir);
-}
-
-void pos_order(Arvore *arv)
-{
-	if (arv->esq != NULL)
-		pos_order(arv->esq);
-
-	if (arv->dir != NULL)
-		pos_order(arv->dir);
-
-	printf("%d ", arv->info);
-}
-
-void imprime_arv_marcadores(Arvore *arv)
-{
-	printf("<");
-	printf("%d", arv->info);
-	if (arv->esq != NULL)
-		imprime_arv_marcadores(arv->esq);
-	else
-		printf("<>");
-
-	if (arv->dir != NULL)
-		imprime_arv_marcadores(arv->dir);
-	else
-		printf("<>");
-	printf(">");
-}
-
-int pertence_arv(Arvore *arv, char c)
-{
-	int x, y;
-	if (arv->info == c)
-		return 1;
-	if (arv->esq != NULL)
-		x = pertence_arv(arv->esq, c);
-	if (x == 1)
-		return 1;
-	if (arv->dir != NULL)
-		y = pertence_arv(arv->dir, c);
-
-	return y;
-}
-
-int conta_nos(Arvore *arv)
-{
-	int nos = 1;
-
-	if (arv->esq != NULL)
-		nos += conta_nos(arv->esq);
-
-	if (arv->dir != NULL)
-		nos += conta_nos(arv->dir);
-
-	return (nos);
-}
-
-int calcula_altura_arvore(Arvore *arv)
-{
-
-	if (verifica_arv_vazia(arv))
-		return -1;
-
-	int alturaEsq, alturaDir;
-
-	if (arv->esq != NULL)
-		alturaEsq = calcula_altura_arvore(arv->esq);
-	else
-		alturaEsq = 0;
-
-	if (arv->dir != NULL)
-		alturaDir = calcula_altura_arvore(arv->dir);
-	else
-		alturaDir = 0;
-
-	if (alturaEsq > alturaDir)
-		return (alturaEsq + 1);
-	else
-		return (alturaDir + 1);
-}
-
-int conta_nos_folha(Arvore *arv)
-{
-	int nos = 0;
-
-	if (arv->esq != NULL)
-		nos = conta_nos(arv->esq);
-
-	if (arv->dir != NULL)
-		nos = conta_nos(arv->dir);
-
-	if (arv->esq == NULL && arv->dir == NULL)
-		nos += 1;
-
-	return nos;
-}
-
-Arvore *inserir(Arvore *arv, int v)
-{
-	if (arv == NULL)
-	{
-		arv = (Arvore *)malloc(sizeof(Arvore));
-		arv->info = v;
-		arv->esq = NULL;
-		arv->dir = NULL;
-	}
-	else if (v < arv->info)
-		arv->esq = inserir(arv->esq, v);
-	else
-		arv->dir = inserir(arv->dir, v);
-	return arv;
-}
-
-Arvore *remover(Arvore *a, int v)
-{
-	if (a == NULL)
-		return NULL;
-	else
-	{
-		if (v < a->info)
-			a->esq = remover(a->esq, v);
-		else if (v > a->info)
-			a->dir = remover(a->dir, v);
-		else if ((a->esq == NULL) && (a->dir == NULL))
-		{
-			free(a);
-			a = NULL;
-		}
-		else if (a->dir == NULL)
-		{
-			Arvore *tmp = a;
-			a = a->esq;
-			free(tmp);
-		}
-		else if (a->esq == NULL)
-		{
-			Arvore *tmp = a;
-			a = a->dir;
-			free(tmp);
-		}
+		if (balanceamento(a->dir) >= 0)
+			a = rotacao_simples_esq(a);
 		else
-		{
-			Arvore *tmp = a->esq;
-			while (tmp->dir != NULL)
-				tmp = tmp->dir;
-			a->info = tmp->info;
-			tmp->info = v;
-			a->esq = remover(a->esq, v);
-		}
+			a = rotacao_dupla_esq(a);
 	}
 	return a;
 }
 
-int buscar(Arvore *arv, int v)
+/*----------------------*/
+Arvore *atualizar_fb_esq(Arvore *a)
 {
-	if (arv == NULL)
-		return 0;
-	else if (v < arv->info)
-		return buscar(arv->esq, v);
-	else if (v > arv->info)
-		return buscar(arv->dir, v);
-	else
-		return 1;
-}
-
-int min(Arvore *a)
-{
-	if (a == NULL)
-		return 0;
-	while (a->esq != NULL)
-		return min(a->esq);
-	return a->info;
-}
-
-int max(Arvore *a)
-{
-	if (a == NULL)
-		return 0;
-	while (a->dir != NULL)
-		return max(a->dir);
-	return a->info;
-}
-
-void imprime_decrescente(Arvore *a)
-{
-	if (a->dir != NULL)
-		imprime_decrescente(a->dir);
-	printf("%d ", a->info);
-	if (a->esq != NULL)
-		imprime_decrescente(a->esq);
-}
-
-int maior_ramo(Arvore *a)
-{
-	if (a != NULL)
+	a->altura = atualizar_altura(a);
+	if (balanceamento(a) == -2)
 	{
-		if (a->esq != NULL && a->dir != NULL)
-		{
-			if (a->info + maior_ramo(a->esq) >= a->info + maior_ramo(a->dir))
-				return a->info + maior_ramo(a->esq);
-			else
-				return a->info + maior_ramo(a->dir);
-		}
-		else if (a->esq != NULL)
-			return a->info + maior_ramo(a->esq);
-		else if (a->dir != NULL)
-			return a->info + maior_ramo(a->dir);
+		if (balanceamento(a->esq) <= 0)
+			a = rotacao_simples_dir(a);
 		else
-			return a->info;
+			a = rotacao_dupla_dir(a);
+	}
+	return a;
+}
+
+/*----------------------*/
+Arvore *inserir(Arvore *a, char chave)
+{
+	if (a == NULL)
+	{
+		a = (No *)malloc(sizeof(No));
+		a->chave = chave;
+		a->altura = 0;
+		a->esq = a->dir = NULL;
+	}
+	else if (a->chave > chave)
+	{
+		a->esq = inserir(a->esq, chave);
+		a = atualizar_fb_esq(a);
+	}
+	else
+	{
+		a->dir = inserir(a->dir, chave);
+		a = atualizar_fb_dir(a);
+	}
+	return a;
+}
+
+/*----------------------*/
+Arvore *remover(Arvore *a, char chave)
+{
+	if (a == NULL)
+	{
+		return NULL;
+	}
+	else
+	{
+		if (chave < a->chave)
+		{
+			a->esq = remover(a->esq, chave);
+			a = atualizar_fb_dir(a);
+		}
+		else if (chave > a->chave)
+		{
+			a->dir = remover(a->dir, chave);
+			a = atualizar_fb_esq(a);
+		}
+		else
+		{
+			if ((a->esq == NULL) && (a->dir == NULL))
+			{
+				free(a);
+				a = NULL;
+			}
+			else if (a->esq == NULL)
+			{
+				No *tmp = a;
+				a = a->dir;
+				free(tmp);
+			}
+			else if (a->dir == NULL)
+			{
+				No *tmp = a;
+				a = a->esq;
+				free(tmp);
+			}
+			else
+			{
+				No *tmp = a->esq;
+				while (tmp->dir != NULL)
+				{
+					tmp = tmp->dir;
+				}
+				a->chave = tmp->chave;
+				tmp->chave = chave;
+				a->esq = remover(a->esq, chave);
+				a = atualizar_fb_dir(a);
+			}
+		}
+		return a;
 	}
 }
 
-int ancestral(Arvore *a, int e1, int e2)
+/*----------------------*/
+void imprimir_in_order(Arvore *a, int nivel)
 {
-	if (a == NULL)
-		return 0;
-	else if (e1 < a->info && e2 < a->info)
-		return ancestral(a->esq, e1, e2);
-	else if (e1 > a->info && e2 > a->info)
-		return ancestral(a->dir, e1, e2);
-	else
-		return a->info;
+	if (a != NULL)
+	{
+		int i;
+		for (i = 0; i < nivel; i++)
+		{
+			printf("	");
+		}
+		printf("Chave: %c (altura: %d, fb: %+d) no nível: %d\n", a->chave, a->altura, balanceamento(a), nivel);
+		imprimir_in_order(a->esq, nivel + 1);
+		imprimir_in_order(a->dir, nivel + 1);
+	}
 }
 
+/*----------------------*/
 int main()
 {
 
-	int i = 0;
-	Arvore *a = cria_arv_vazia();
+	Arvore *AVL = NULL;
 
-	a = inserir(a, 50);
-	a = inserir(a, 30);
-	a = inserir(a, 90);
-	a = inserir(a, 20);
-	a = inserir(a, 40);
-	a = inserir(a, 95);
-	a = inserir(a, 10);
-	a = inserir(a, 35);
-	a = inserir(a, 37);
+	AVL = inserir(AVL, 'Q');
+	AVL = inserir(AVL, 'A');
+	AVL = inserir(AVL, 'H');
+	AVL = inserir(AVL, 'E');
+	AVL = inserir(AVL, 'W');
+	AVL = inserir(AVL, 'G');
+	AVL = inserir(AVL, 'N');
+	AVL = inserir(AVL, 'P');
+	AVL = inserir(AVL, 'O');
 
-	//a = remover(a, 10);
+	// AVL = remover (AVL, 'A');
+	// AVL = remover (AVL, 'H');
+	// AVL = remover (AVL, 'E');
+	// AVL = remover (AVL, 'W');
+	// AVL = remover (AVL, 'G');
+	// AVL = remover (AVL, 'N');
+	// AVL = remover (AVL, 'P');
+	// AVL = remover (AVL, 'O');
 
-	printf("\nEx1: ");
-	pre_order(a);
-	printf("\n%d ", buscar(a, 40));
-	printf("\nEx2: %d ", min(a));
-	printf("\nEx2: %d ", max(a));
-	//printf("\nEx3 %d ", buscar(a, 100000)); //13.473
-	//printf("\nEx4 %d ", buscar(a, 100000)); //11.449
-	printf("\nEx4: ");
-	imprime_decrescente(a);
-	printf("\nEx5: %d", maior_ramo(a));
-	printf("\nEx6: %d", ancestral(a, 10, 35));
+	imprimir_in_order(AVL, 0);
 
 	return 0;
 }

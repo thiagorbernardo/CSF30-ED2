@@ -1,46 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct _arvore {
-   char info;
-   struct _arvore *esq;
-   struct _arvore *dir;
-} Arvore;
+typedef struct node {
+   char chave;
+   int altura;
+   struct node* esq;
+   struct node* dir;
+} No, Arvore;
 
-Arvore* cria_arv_vazia ();
-
-void destroi_arv (Arvore *arv);
-
-Arvore* constroi_arv (char elem, Arvore *esq, Arvore *dir);
-
-int verifica_arv_vazia (Arvore *a);
-
-void arv_libera (Arvore* a);
-
-void pre_order(Arvore *arv);
 void in_order(Arvore *arv);
-void pos_order(Arvore *arv);
+int maior (int esq, int dir);
 
-void imprime_arv_marcadores (Arvore* arv);
+int altura (Arvore* a);
+int atualizar_altura (Arvore *a);
+int balanceamento (Arvore *a);
 
-int pertence_arv (Arvore *a, char c);
+Arvore* rotacao_simples_esq (Arvore* a);
+Arvore* rotacao_simples_dir (Arvore* a);
+Arvore* rotacao_dupla_esq (Arvore* a);
+Arvore* rotacao_dupla_dir (Arvore* a);
+Arvore* atualizar_fb_dir (Arvore *a);
 
-int conta_nos (Arvore *a);
-
-int calcula_altura_arvore (Arvore *a);
-
-int conta_nos_folha (Arvore *a);
-
-Arvore* inserir (Arvore *a, int v);
-
-Arvore* remover (Arvore *a, int v);
-
-int buscar (Arvore *a, int v);
-
-int min (Arvore *a);
-
-int max (Arvore *a);
-
-void imprime_decrescente (Arvore *a);
-
-int maior_ramo (Arvore *a);
+Arvore* atualizar_fb_esq (Arvore *a);
+Arvore* inserir (Arvore *a, char chave);
